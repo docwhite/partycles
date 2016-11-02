@@ -1,2 +1,2 @@
-# partycles
-Experimenting the C++, CUDA and OpenGL combination
+# Lacabra
+A node-based SDF modelling experiment
