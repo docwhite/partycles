@@ -19,6 +19,7 @@ public:
 private:
     GLfloat m_vertices[9];
     QOpenGLBuffer* m_VBO;
+    GLuint m_VBO_index;
     QOpenGLVertexArrayObject* m_VAO;
     GLuint m_posAttr;
     ParticleSystem m_particle_system;

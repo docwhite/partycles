@@ -54,6 +54,7 @@ SOURCES       = src/main.cpp \
 		src/viewport.cpp build/moc/moc_viewport.cpp
 OBJECTS       = build/obj/particle_hybrid_cuda.o \
 		build/obj/kernel_particle_advance_cuda.o \
+		build/obj/kernel_modifying_vbo_cuda.o \
 		build/obj/main.o \
 		build/obj/particlesystem.o \
 		build/obj/particleswindow.o \
@@ -561,7 +562,7 @@ distdir: FORCE
 	@test -d $(DISTDIR) || mkdir -p $(DISTDIR)
 	$(COPY_FILE) --parents $(DIST) $(DISTDIR)/
 	$(COPY_FILE) --parents src/particle.cpp $(DISTDIR)/
-	$(COPY_FILE) --parents cu/kernel_particle_advance.cu $(DISTDIR)/
+	$(COPY_FILE) --parents cu/kernel_particle_advance.cu cu/kernel_modifying_vbo.cu $(DISTDIR)/
 	$(COPY_FILE) --parents include/particle.h include/particleswindow.h include/particlesystem.h include/viewport.h $(DISTDIR)/
 	$(COPY_FILE) --parents src/main.cpp src/particlesystem.cpp src/particleswindow.cpp src/viewport.cpp $(DISTDIR)/
 
@@ -594,13 +595,16 @@ build/obj/particle_hybrid_cuda.o: include/particle.h \
 		src/particle.cpp
 	/usr/bin/nvcc -I/usr/include/cuda -I/home/i7243466/devel/partycles/include -x cu -arch=sm_20 -dc -o build/obj/particle_hybrid_cuda.o src/particle.cpp
 
-compiler_cuda_kernels_make_all: build/obj/kernel_particle_advance_cuda.o
+compiler_cuda_kernels_make_all: build/obj/kernel_particle_advance_cuda.o build/obj/kernel_modifying_vbo_cuda.o
 compiler_cuda_kernels_clean:
-	-$(DEL_FILE) build/obj/kernel_particle_advance_cuda.o
+	-$(DEL_FILE) build/obj/kernel_particle_advance_cuda.o build/obj/kernel_modifying_vbo_cuda.o
 build/obj/kernel_particle_advance_cuda.o: include/particlesystem.h \
 		include/particle.h \
 		cu/kernel_particle_advance.cu
 	/usr/bin/nvcc -I/usr/include/cuda -I/home/i7243466/devel/partycles/include -arch=sm_20 -dc -o build/obj/kernel_particle_advance_cuda.o cu/kernel_particle_advance.cu
+
+build/obj/kernel_modifying_vbo_cuda.o: cu/kernel_modifying_vbo.cu
+	/usr/bin/nvcc -I/usr/include/cuda -I/home/i7243466/devel/partycles/include -arch=sm_20 -dc -o build/obj/kernel_modifying_vbo_cuda.o cu/kernel_modifying_vbo.cu
 
 compiler_rcc_make_all:
 compiler_rcc_clean:
@@ -810,10 +814,14 @@ build/obj/main.o: src/main.cpp /opt/Qt5.7.0/5.7/gcc_64/include/QtGui/QGuiApplica
 		/opt/Qt5.7.0/5.7/gcc_64/include/QtCore/qdatastream.h \
 		/opt/Qt5.7.0/5.7/gcc_64/include/QtCore/qrect.h \
 		/opt/Qt5.7.0/5.7/gcc_64/include/QtCore/qmargins.h \
+		/opt/Qt5.7.0/5.7/gcc_64/include/QtGui/QOpenGLVertexArrayObject \
+		/opt/Qt5.7.0/5.7/gcc_64/include/QtGui/qopenglvertexarrayobject.h \
+		/opt/Qt5.7.0/5.7/gcc_64/include/QtCore/QObject \
+		/opt/Qt5.7.0/5.7/gcc_64/include/QtGui/QOpenGLBuffer \
+		/opt/Qt5.7.0/5.7/gcc_64/include/QtGui/qopenglbuffer.h \
 		include/viewport.h \
 		/opt/Qt5.7.0/5.7/gcc_64/include/QtGui/QWindow \
 		/opt/Qt5.7.0/5.7/gcc_64/include/QtGui/qwindow.h \
-		/opt/Qt5.7.0/5.7/gcc_64/include/QtCore/QObject \
 		/opt/Qt5.7.0/5.7/gcc_64/include/QtCore/QEvent \
 		/opt/Qt5.7.0/5.7/gcc_64/include/QtCore/QMargins \
 		/opt/Qt5.7.0/5.7/gcc_64/include/QtCore/QRect \
@@ -926,10 +934,14 @@ build/obj/particleswindow.o: src/particleswindow.cpp /opt/Qt5.7.0/5.7/gcc_64/inc
 		/opt/Qt5.7.0/5.7/gcc_64/include/QtCore/qmargins.h \
 		/opt/Qt5.7.0/5.7/gcc_64/include/QtCore/qsize.h \
 		include/particleswindow.h \
+		/opt/Qt5.7.0/5.7/gcc_64/include/QtGui/QOpenGLVertexArrayObject \
+		/opt/Qt5.7.0/5.7/gcc_64/include/QtGui/qopenglvertexarrayobject.h \
+		/opt/Qt5.7.0/5.7/gcc_64/include/QtCore/QObject \
+		/opt/Qt5.7.0/5.7/gcc_64/include/QtGui/QOpenGLBuffer \
+		/opt/Qt5.7.0/5.7/gcc_64/include/QtGui/qopenglbuffer.h \
 		include/viewport.h \
 		/opt/Qt5.7.0/5.7/gcc_64/include/QtGui/QWindow \
 		/opt/Qt5.7.0/5.7/gcc_64/include/QtGui/qwindow.h \
-		/opt/Qt5.7.0/5.7/gcc_64/include/QtCore/QObject \
 		/opt/Qt5.7.0/5.7/gcc_64/include/QtCore/QEvent \
 		/opt/Qt5.7.0/5.7/gcc_64/include/QtCore/QMargins \
 		/opt/Qt5.7.0/5.7/gcc_64/include/QtCore/QRect \

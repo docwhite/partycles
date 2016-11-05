@@ -4,6 +4,7 @@
 #include "particleswindow.h"
 
 void advance_particles(ParticleSystem& _ps, float *_vertices);
+void modifying_vbo(unsigned int VBO_id);
 
 static const char *vertexShaderSource =
     "attribute highp vec3 posAttr;\n"
@@ -62,6 +63,8 @@ void ParticlesWindow::initialize()
     m_VAO->create();
     m_VBO->create();
 
+    m_VBO_index = m_VBO->bufferId(); // the id will be needed by cuda to know which buffer to share
+
     m_VBO->setUsagePattern(QOpenGLBuffer::DynamicDraw);
 
     m_VAO->bind();
@@ -75,7 +78,7 @@ void ParticlesWindow::initialize()
     m_VBO->release();
     m_VAO->release();
 
-
+    modifying_vbo(m_VBO_index);
 }
 
 void ParticlesWindow::render()
@@ -86,9 +89,8 @@ void ParticlesWindow::render()
     m_VAO->bind();
 
 
-    glDrawArrays(GL_POINTS, 0, 3);
     glEnable(GL_PROGRAM_POINT_SIZE);
-
+    glDrawArrays(GL_POINTS, 0, 3);
 
     m_VAO->release();
     m_program->release();

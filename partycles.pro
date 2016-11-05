@@ -17,10 +17,12 @@ SOURCES += \
     src/viewport.cpp
 
 CUDA_CU_FILES= \
-    cu/kernel_particle_advance.cu
+    cu/kernel_particle_advance.cu \
+    cu/kernel_modifying_vbo.cu
 
 CUDA_HYBRID_CPP_FILES = \
     src/particle.cpp
+
 
 CXXFLAGS = -c
 OBJECTS_DIR = build/obj
