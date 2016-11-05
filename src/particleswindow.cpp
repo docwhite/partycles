@@ -69,10 +69,7 @@ void ParticlesWindow::initialize()
 
     m_VBO->allocate(m_vertices, 9 * sizeof(GLfloat));
 
-//    m_program->setAttributeArray(m_posAttr, GL_FLOAT, m_vertices, 3, 0);
-//    m_program->enableAttributeArray(m_posAttr);
-
-    m_program->setAttributeBuffer(m_posAttr, GL_FLOAT, 0, 3, 0);
+    m_program->setAttributeBuffer(m_posAttr, GL_FLOAT, 0, 3);
     m_program->enableAttributeArray(m_posAttr);
 
     m_VBO->release();
@@ -89,7 +86,7 @@ void ParticlesWindow::render()
     m_VAO->bind();
 
 
-    glDrawArrays(GL_POINTS, 0, 9);
+    glDrawArrays(GL_POINTS, 0, 3);
     glEnable(GL_PROGRAM_POINT_SIZE);
 
 
@@ -100,7 +97,6 @@ void ParticlesWindow::render()
 }
 
 void ParticlesWindow::keyPressEvent(QKeyEvent *ev) {
-    std::cout << "YO" << std::endl;
     m_vertices[6] = -0.8f;
     m_vertices[7] = 0.0f;
     m_vertices[8] = 0.0f;
