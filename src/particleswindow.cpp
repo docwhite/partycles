@@ -107,7 +107,6 @@ void ParticlesWindow::keyPressEvent(QKeyEvent *ev) {
 
     m_VBO->bind();
     m_VBO->write(0, m_vertices, 9 * sizeof(GLfloat));
-    m_program->setAttributeBuffer(m_posAttr, GL_FLOAT, 0, 3, 0);
     m_VBO->release();
 
 }
