@@ -3,14 +3,13 @@
 #include <QtGui/QOpenGLShaderProgram>
 #include "particleswindow.h"
 
-extern "C"
-void ramon(ParticleSystem& _ps, float *_vertices);
+void advance_particles(ParticleSystem& _ps, float *_vertices);
 
 static const char *vertexShaderSource =
-    "attribute highp vec4 posAttr;\n"
+    "attribute highp vec3 posAttr;\n"
     "void main() {\n"
     "   gl_PointSize = 10.0;\n"
-    "   gl_Position = posAttr;\n"
+    "   gl_Position = vec4(posAttr, 1.0);\n"
     "}\n";
 
 static const char *fragmentShaderSource =
@@ -35,46 +34,80 @@ void ParticlesWindow::initialize()
     m_program->addShaderFromSourceCode(QOpenGLShader::Vertex, vertexShaderSource);
     m_program->addShaderFromSourceCode(QOpenGLShader::Fragment, fragmentShaderSource);
     m_program->link();
+
     m_posAttr = m_program->attributeLocation("posAttr");
 
-    m_particle_system.birth_particle();
+//    for (int i = 0; i < 10; i++)
+//        m_particle_system.birth_particle();
+
+//    float vertices[m_particle_system.m_particles.size() * 3];
+//    advance_particles(m_particle_system, vertices);
+    m_vertices[0] = 0.0f;
+    m_vertices[1] = 0.5f;
+    m_vertices[2] = 0.0f;
+
+    m_vertices[3] = 0.5f;
+    m_vertices[4] = 0.0f;
+    m_vertices[5] = 0.0f;
+
+    m_vertices[6] = -0.5f;
+    m_vertices[7] = 0.0f;
+    m_vertices[8] = 0.0f;
+
+    glViewport(0, 0, width(), height());
+
+    m_VAO = new QOpenGLVertexArrayObject(this);
+    m_VBO = new QOpenGLBuffer(QOpenGLBuffer::VertexBuffer);
+
+    m_VAO->create();
+    m_VBO->create();
+
+    m_VBO->setUsagePattern(QOpenGLBuffer::DynamicDraw);
+
+    m_VAO->bind();
+    m_VBO->bind();
+
+    m_VBO->allocate(m_vertices, 9 * sizeof(GLfloat));
+
+//    m_program->setAttributeArray(m_posAttr, GL_FLOAT, m_vertices, 3, 0);
+//    m_program->enableAttributeArray(m_posAttr);
+
+    m_program->setAttributeBuffer(m_posAttr, GL_FLOAT, 0, 3, 0);
+    m_program->enableAttributeArray(m_posAttr);
+
+    m_VBO->release();
+    m_VAO->release();
+
+
 }
 
 void ParticlesWindow::render()
 {
-    float vertices[m_particle_system.m_particles.size()*3];
-    ramon(m_particle_system, vertices);
-
-    const qreal retinaScale = devicePixelRatio();
-    glViewport(0, 0, width() * retinaScale, height() * retinaScale);
-
     glClear(GL_COLOR_BUFFER_BIT);
 
     m_program->bind();
+    m_VAO->bind();
 
-    glVertexAttribPointer(m_posAttr, 3, GL_FLOAT, GL_FALSE, 0, vertices);
 
-    glEnableVertexAttribArray(m_posAttr);
-
-    glDrawArrays(GL_POINTS, 0, m_particle_system.m_particles.size());
+    glDrawArrays(GL_POINTS, 0, 9);
     glEnable(GL_PROGRAM_POINT_SIZE);
 
-    glDisableVertexAttribArray(m_posAttr);
 
+    m_VAO->release();
     m_program->release();
 
     ++m_frame;
 }
 
 void ParticlesWindow::keyPressEvent(QKeyEvent *ev) {
-    std::cout << "HEY!" << std::endl;
-    m_particle_system.birth_particle();
-}
+    std::cout << "YO" << std::endl;
+    m_vertices[6] = -0.8f;
+    m_vertices[7] = 0.0f;
+    m_vertices[8] = 0.0f;
 
-//void ParticlesWindow::pass_particle(std::vector<Particle> _particles)
-//{
-//    for(std::vector<Particle>::iterator it = _particles.begin(); it != _particles.end(); ++it) {
-//        std::cout << "HELLO" << std::endl;
-//        /* std::cout << *it; ... */
-//    }
-//}
+    m_VBO->bind();
+    m_VBO->write(0, m_vertices, 9 * sizeof(GLfloat));
+    m_program->setAttributeBuffer(m_posAttr, GL_FLOAT, 0, 3, 0);
+    m_VBO->release();
+
+}

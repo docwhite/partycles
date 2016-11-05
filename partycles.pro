@@ -1,43 +1,47 @@
 TARGET = Partycles
-CONFIG += console c++11
 
-# Define output directories
-DESTDIR = release
-OBJECTS_DIR = release/obj
-CUDA_OBJECTS_DIR = release/cuda
+QT += core gui widgets
 
-INCLUDEPATH += \
-    $$PWD/include \
-    /usr/include/cuda
+INCLUDEPATH += include/
 
-
-# Project Source files
-SOURCES += \
-    $$PWD/src/main.cpp \
-    $$PWD/src/viewport.cpp \
-    $$PWD/src/particleswindow.cpp \
-    $$PWD/src/particle.cpp \
-    $$PWD/src/particlesystem.cpp
-
-# Project header files
 HEADERS += \
-    $$PWD/include/viewport.h \
-    $$PWD/include/particleswindow.h \
-    $$PWD/include/particle.h \
-    $$PWD/include/particlesystem.h
+    include/particle.h \
+    include/particleswindow.h \
+    include/particlesystem.h \
+    include/viewport.h
 
-LIBS += -L/usr/lib64/nvidia -lcuda -L/usr/lib64 -lcudart -L/usr/lib64/nvidia -lGL
+SOURCES += \
+    src/main.cpp \
+    src/particlesystem.cpp \
+    src/particleswindow.cpp \
+    src/viewport.cpp
 
-# Cuda
-CUDA_SOURCES += $$PWD/kernel/*.cu
-CUDA_INCLUDEPATH=/usr/include/cuda
-NVCC_OPTS = -O3 -arch=sm_20 -Xcompiler -Wall -Xcompiler -Wextra -m64
+CUDA_CU_FILES= \
+    cu/kernel_particle_advance.cu
 
-cuda_d.input = CUDA_SOURCES
-cuda_d.output = $$CUDA_OBJECTS_DIR/${QMAKE_FILE_BASE}_cuda.o
-cuda_d.commands = /usr/bin/nvcc $$NVCC_OPTS -I$$PWD/include -I $$CUDA_INCLUDEPATH -L/usr/lib64/nvidia -lcuda -L/usr/lib64 -lcudart -c -o ${QMAKE_FILE_OUT} ${QMAKE_FILE_NAME}
-cuda_d.dependency_type = TYPE_C
-QMAKE_EXTRA_COMPILERS += cuda_d
+CUDA_HYBRID_CPP_FILES = \
+    src/particle.cpp
 
-DISTFILES += \
-    kernel/ramon.cu
+CXXFLAGS = -c
+OBJECTS_DIR = build/obj
+MOC_DIR = build/moc
+
+CUDA_INCLUDES = -I/usr/include/cuda -I$$PWD/include
+
+LIBS += $$OBJECTS_DIR/dlink.o
+LIBS += -L/usr/lib64 -lcudart
+LIBS += -L/usr/lib64/nvidia -lcuda
+
+cuda_hybrid.input = CUDA_HYBRID_CPP_FILES
+cuda_hybrid.output = $$OBJECTS_DIR/${QMAKE_FILE_BASE}_hybrid_cuda.o
+cuda_hybrid.commands = /usr/bin/nvcc $$CUDA_INCLUDES -x cu -arch=sm_20 -dc -o ${QMAKE_FILE_OUT} ${QMAKE_FILE_NAME}
+cuda_hybrid.dependency_type = TYPE_C
+QMAKE_EXTRA_COMPILERS += cuda_hybrid
+
+cuda_kernels.input = CUDA_CU_FILES
+cuda_kernels.output = $$OBJECTS_DIR/${QMAKE_FILE_BASE}_cuda.o
+cuda_kernels.commands = /usr/bin/nvcc $$CUDA_INCLUDES -arch=sm_20 -dc -o ${QMAKE_FILE_OUT} ${QMAKE_FILE_NAME}
+cuda_kernels.dependency_type = TYPE_C
+QMAKE_EXTRA_COMPILERS += cuda_kernels
+
+QMAKE_PRE_LINK = /usr/bin/nvcc $$CUDA_INCLUDES -arch=sm_20 -dlink $$OBJECTS_DIR/*_cuda.o -o $$OBJECTS_DIR/dlink.o

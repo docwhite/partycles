@@ -2,6 +2,8 @@
 #define PARTICLESWINDOW_H
 
 #include <QtGui/QOpenGLShaderProgram>
+#include <QtGui/QOpenGLVertexArrayObject>
+#include <QtGui/QOpenGLBuffer>
 #include "viewport.h"
 #include "particlesystem.h"
 #include "particle.h"
@@ -15,6 +17,9 @@ public:
     void render() Q_DECL_OVERRIDE;
 
 private:
+    GLfloat m_vertices[9];
+    QOpenGLBuffer* m_VBO;
+    QOpenGLVertexArrayObject* m_VAO;
     GLuint m_posAttr;
     ParticleSystem m_particle_system;
     QOpenGLShaderProgram *m_program;
