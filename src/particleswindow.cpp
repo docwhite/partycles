@@ -31,6 +31,8 @@ ParticlesWindow::ParticlesWindow()
 
 void ParticlesWindow::initialize()
 {
+    glViewport(0, 0, width(), height());
+
     m_program = new QOpenGLShaderProgram(this);
     m_program->addShaderFromSourceCode(QOpenGLShader::Vertex, vertexShaderSource);
     m_program->addShaderFromSourceCode(QOpenGLShader::Fragment, fragmentShaderSource);
@@ -38,33 +40,12 @@ void ParticlesWindow::initialize()
 
     m_posAttr = m_program->attributeLocation("posAttr");
 
-//    for (int i = 0; i < 10; i++)
-//        m_particle_system.birth_particle();
-
-//    float vertices[m_particle_system.m_particles.size() * 3];
-//    advance_particles(m_particle_system, vertices);
-    m_vertices[0] = 0.0f;
-    m_vertices[1] = 0.5f;
-    m_vertices[2] = 0.0f;
-
-    m_vertices[3] = 0.5f;
-    m_vertices[4] = 0.0f;
-    m_vertices[5] = 0.0f;
-
-    m_vertices[6] = -0.5f;
-    m_vertices[7] = 0.0f;
-    m_vertices[8] = 0.0f;
-
-    glViewport(0, 0, width(), height());
 
     m_VAO = new QOpenGLVertexArrayObject(this);
     m_VBO = new QOpenGLBuffer(QOpenGLBuffer::VertexBuffer);
 
     m_VAO->create();
     m_VBO->create();
-
-    m_VBO_index = m_VBO->bufferId(); // the id will be needed by cuda to know which buffer to share
-
     m_VBO->setUsagePattern(QOpenGLBuffer::DynamicDraw);
 
     m_VAO->bind();
@@ -78,16 +59,17 @@ void ParticlesWindow::initialize()
     m_VBO->release();
     m_VAO->release();
 
-    modifying_vbo(m_VBO_index);
 }
 
 void ParticlesWindow::render()
 {
     glClear(GL_COLOR_BUFFER_BIT);
 
+    // Pass vertex data to CUDA
+    modifying_vbo(m_VBO->bufferId());
+
     m_program->bind();
     m_VAO->bind();
-
 
     glEnable(GL_PROGRAM_POINT_SIZE);
     glDrawArrays(GL_POINTS, 0, 3);
@@ -98,13 +80,17 @@ void ParticlesWindow::render()
     ++m_frame;
 }
 
-void ParticlesWindow::keyPressEvent(QKeyEvent *ev) {
-    m_vertices[6] = -0.8f;
-    m_vertices[7] = 0.0f;
-    m_vertices[8] = 0.0f;
-
-    m_VBO->bind();
-    m_VBO->write(0, m_vertices, 9 * sizeof(GLfloat));
-    m_VBO->release();
+void ParticlesWindow::keyPressEvent(QKeyEvent *ev)
+{
+// This is the way you would tell OpenGL that the attribute buffer with
+// all the positions have changed and that needs to redraw them:
+//   m_vertices[6] = -0.8f;
+//   m_vertices[7] = 0.0f;
+//   m_vertices[8] = 0.0f;
+//   m_VBO->bind();
+//   m_VBO->write(0, m_vertices, 9 * sizeof(GLfloat));
+//   m_VBO->release();
+// Not using this right now as CUDA would be redrawing wherever the kernel
+// wants.
 
 }
