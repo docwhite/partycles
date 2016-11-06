@@ -2,6 +2,8 @@
 #include <cuda_runtime.h>
 #include <cuda_gl_interop.h>
 
+#include <iostream>
+
 __global__ void modifying_vbo_kernel(float *pos)
 {
     unsigned int index = threadIdx.x;
@@ -22,6 +24,8 @@ void modifying_vbo(unsigned int VBO_id) {
 
     // Tells the right way to bind the device pointer to the correct resource
     cudaGraphicsResourceGetMappedPointer((void**)&d_ptr, &num_bytes, cuda_vbo_resource);
+
+    std::cout << num_bytes / sizeof(float) << std::endl;
 
     // Launch the kernel
     modifying_vbo_kernel<<<1, 9>>>(d_ptr);

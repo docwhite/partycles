@@ -40,7 +40,6 @@ void ParticlesWindow::initialize()
 
     m_posAttr = m_program->attributeLocation("posAttr");
 
-
     m_VAO = new QOpenGLVertexArrayObject(this);
     m_VBO = new QOpenGLBuffer(QOpenGLBuffer::VertexBuffer);
 
