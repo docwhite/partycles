@@ -15,7 +15,7 @@ CXX           = g++
 DEFINES       = -DQT_QML_DEBUG -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_CORE_LIB
 CFLAGS        = -pipe -g -Wall -W -D_REENTRANT -fPIC $(DEFINES)
 CXXFLAGS      = -pipe -g -std=gnu++11 -Wall -W -D_REENTRANT -fPIC $(DEFINES)
-INCPATH       = -I. -Iinclude -I/opt/Qt5.7.0/5.7/gcc_64/include -I/opt/Qt5.7.0/5.7/gcc_64/include/QtWidgets -I/opt/Qt5.7.0/5.7/gcc_64/include/QtGui -I/opt/Qt5.7.0/5.7/gcc_64/include/QtCore -Ibuild/moc -I/opt/Qt5.7.0/5.7/gcc_64/mkspecs/linux-g++
+INCPATH       = -I. -isystem /usr/include/cuda -Iinclude -I/opt/Qt5.7.0/5.7/gcc_64/include -I/opt/Qt5.7.0/5.7/gcc_64/include/QtWidgets -I/opt/Qt5.7.0/5.7/gcc_64/include/QtGui -I/opt/Qt5.7.0/5.7/gcc_64/include/QtCore -Ibuild/moc -I/opt/Qt5.7.0/5.7/gcc_64/mkspecs/linux-g++
 QMAKE         = /opt/Qt5.7.0/5.7/gcc_64/bin/qmake
 DEL_FILE      = rm -f
 CHK_DIR_EXISTS= test -d
@@ -49,14 +49,11 @@ OBJECTS_DIR   = build/obj/
 ####### Files
 
 SOURCES       = src/main.cpp \
-		src/particlesystem.cpp \
 		src/particleswindow.cpp \
 		src/viewport.cpp build/moc/moc_viewport.cpp
-OBJECTS       = build/obj/particle_hybrid_cuda.o \
-		build/obj/kernel_particle_advance_cuda.o \
+OBJECTS       = build/obj/particlesystem_hybrid_cuda.o \
 		build/obj/kernel_modifying_vbo_cuda.o \
 		build/obj/main.o \
-		build/obj/particlesystem.o \
 		build/obj/particleswindow.o \
 		build/obj/viewport.o \
 		build/obj/moc_viewport.o
@@ -213,11 +210,9 @@ DIST          = /opt/Qt5.7.0/5.7/gcc_64/mkspecs/features/spec_pre.prf \
 		/opt/Qt5.7.0/5.7/gcc_64/mkspecs/features/exceptions.prf \
 		/opt/Qt5.7.0/5.7/gcc_64/mkspecs/features/yacc.prf \
 		/opt/Qt5.7.0/5.7/gcc_64/mkspecs/features/lex.prf \
-		partycles.pro include/particle.h \
-		include/particleswindow.h \
+		partycles.pro include/particleswindow.h \
 		include/particlesystem.h \
 		include/viewport.h src/main.cpp \
-		src/particlesystem.cpp \
 		src/particleswindow.cpp \
 		src/viewport.cpp
 QMAKE_TARGET  = Partycles
@@ -561,10 +556,10 @@ dist: distdir FORCE
 distdir: FORCE
 	@test -d $(DISTDIR) || mkdir -p $(DISTDIR)
 	$(COPY_FILE) --parents $(DIST) $(DISTDIR)/
-	$(COPY_FILE) --parents src/particle.cpp $(DISTDIR)/
-	$(COPY_FILE) --parents cu/kernel_particle_advance.cu cu/kernel_modifying_vbo.cu $(DISTDIR)/
-	$(COPY_FILE) --parents include/particle.h include/particleswindow.h include/particlesystem.h include/viewport.h $(DISTDIR)/
-	$(COPY_FILE) --parents src/main.cpp src/particlesystem.cpp src/particleswindow.cpp src/viewport.cpp $(DISTDIR)/
+	$(COPY_FILE) --parents src/particlesystem.cpp $(DISTDIR)/
+	$(COPY_FILE) --parents cu/kernel_modifying_vbo.cu $(DISTDIR)/
+	$(COPY_FILE) --parents include/particleswindow.h include/particlesystem.h include/viewport.h $(DISTDIR)/
+	$(COPY_FILE) --parents src/main.cpp src/particleswindow.cpp src/viewport.cpp $(DISTDIR)/
 
 
 clean: compiler_clean 
@@ -588,22 +583,18 @@ check: first
 
 benchmark: first
 
-compiler_cuda_hybrid_make_all: build/obj/particle_hybrid_cuda.o
+compiler_cuda_hybrid_make_all: build/obj/particlesystem_hybrid_cuda.o
 compiler_cuda_hybrid_clean:
-	-$(DEL_FILE) build/obj/particle_hybrid_cuda.o
-build/obj/particle_hybrid_cuda.o: include/particle.h \
-		src/particle.cpp
-	/usr/bin/nvcc -I/usr/include/cuda -I/home/i7243466/devel/partycles/include -x cu -arch=sm_20 -dc -o build/obj/particle_hybrid_cuda.o src/particle.cpp
+	-$(DEL_FILE) build/obj/particlesystem_hybrid_cuda.o
+build/obj/particlesystem_hybrid_cuda.o: include/particlesystem.h \
+		src/particlesystem.cpp
+	/usr/bin/nvcc -I/usr/include/cuda -I/home/i7243466/devel/partycles/include -x cu -arch=sm_20 -dc -o build/obj/particlesystem_hybrid_cuda.o src/particlesystem.cpp
 
-compiler_cuda_kernels_make_all: build/obj/kernel_particle_advance_cuda.o build/obj/kernel_modifying_vbo_cuda.o
+compiler_cuda_kernels_make_all: build/obj/kernel_modifying_vbo_cuda.o
 compiler_cuda_kernels_clean:
-	-$(DEL_FILE) build/obj/kernel_particle_advance_cuda.o build/obj/kernel_modifying_vbo_cuda.o
-build/obj/kernel_particle_advance_cuda.o: include/particlesystem.h \
-		include/particle.h \
-		cu/kernel_particle_advance.cu
-	/usr/bin/nvcc -I/usr/include/cuda -I/home/i7243466/devel/partycles/include -arch=sm_20 -dc -o build/obj/kernel_particle_advance_cuda.o cu/kernel_particle_advance.cu
-
-build/obj/kernel_modifying_vbo_cuda.o: cu/kernel_modifying_vbo.cu
+	-$(DEL_FILE) build/obj/kernel_modifying_vbo_cuda.o
+build/obj/kernel_modifying_vbo_cuda.o: include/particlesystem.h \
+		cu/kernel_modifying_vbo.cu
 	/usr/bin/nvcc -I/usr/include/cuda -I/home/i7243466/devel/partycles/include -arch=sm_20 -dc -o build/obj/kernel_modifying_vbo_cuda.o cu/kernel_modifying_vbo.cu
 
 compiler_rcc_make_all:
@@ -713,7 +704,7 @@ build/moc/moc_viewport.cpp: /opt/Qt5.7.0/5.7/gcc_64/include/QtGui/QWindow \
 		/opt/Qt5.7.0/5.7/gcc_64/include/QtCore/qcontiguouscache.h \
 		include/viewport.h \
 		/opt/Qt5.7.0/5.7/gcc_64/bin/moc
-	/opt/Qt5.7.0/5.7/gcc_64/bin/moc $(DEFINES) -I/opt/Qt5.7.0/5.7/gcc_64/mkspecs/linux-g++ -I/home/i7243466/devel/partycles -I/home/i7243466/devel/partycles/include -I/opt/Qt5.7.0/5.7/gcc_64/include -I/opt/Qt5.7.0/5.7/gcc_64/include/QtWidgets -I/opt/Qt5.7.0/5.7/gcc_64/include/QtGui -I/opt/Qt5.7.0/5.7/gcc_64/include/QtCore -I/usr/include/c++/4.8.5 -I/usr/include/c++/4.8.5/x86_64-redhat-linux -I/usr/include/c++/4.8.5/backward -I/usr/lib/gcc/x86_64-redhat-linux/4.8.5/include -I/usr/local/include -I/usr/include include/viewport.h -o build/moc/moc_viewport.cpp
+	/opt/Qt5.7.0/5.7/gcc_64/bin/moc $(DEFINES) -I/opt/Qt5.7.0/5.7/gcc_64/mkspecs/linux-g++ -I/home/i7243466/devel/partycles -I/usr/include/cuda -I/home/i7243466/devel/partycles/include -I/opt/Qt5.7.0/5.7/gcc_64/include -I/opt/Qt5.7.0/5.7/gcc_64/include/QtWidgets -I/opt/Qt5.7.0/5.7/gcc_64/include/QtGui -I/opt/Qt5.7.0/5.7/gcc_64/include/QtCore -I/usr/include/c++/4.8.5 -I/usr/include/c++/4.8.5/x86_64-redhat-linux -I/usr/include/c++/4.8.5/backward -I/usr/lib/gcc/x86_64-redhat-linux/4.8.5/include -I/usr/local/include -I/usr/include include/viewport.h -o build/moc/moc_viewport.cpp
 
 compiler_moc_source_make_all:
 compiler_moc_source_clean:
@@ -848,13 +839,8 @@ build/obj/main.o: src/main.cpp /opt/Qt5.7.0/5.7/gcc_64/include/QtGui/QGuiApplica
 		/opt/Qt5.7.0/5.7/gcc_64/include/QtCore/QScopedPointer \
 		/opt/Qt5.7.0/5.7/gcc_64/include/QtGui/QSurfaceFormat \
 		/opt/Qt5.7.0/5.7/gcc_64/include/QtGui/qopenglversionfunctions.h \
-		include/particlesystem.h \
-		include/particle.h
+		include/particlesystem.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o build/obj/main.o src/main.cpp
-
-build/obj/particlesystem.o: src/particlesystem.cpp include/particlesystem.h \
-		include/particle.h
-	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o build/obj/particlesystem.o src/particlesystem.cpp
 
 build/obj/particleswindow.o: src/particleswindow.cpp /opt/Qt5.7.0/5.7/gcc_64/include/QtGui/QOpenGLShaderProgram \
 		/opt/Qt5.7.0/5.7/gcc_64/include/QtGui/qopenglshaderprogram.h \
@@ -970,8 +956,7 @@ build/obj/particleswindow.o: src/particleswindow.cpp /opt/Qt5.7.0/5.7/gcc_64/inc
 		/opt/Qt5.7.0/5.7/gcc_64/include/QtCore/QScopedPointer \
 		/opt/Qt5.7.0/5.7/gcc_64/include/QtGui/QSurfaceFormat \
 		/opt/Qt5.7.0/5.7/gcc_64/include/QtGui/qopenglversionfunctions.h \
-		include/particlesystem.h \
-		include/particle.h
+		include/particlesystem.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o build/obj/particleswindow.o src/particleswindow.cpp
 
 build/obj/viewport.o: src/viewport.cpp include/viewport.h \

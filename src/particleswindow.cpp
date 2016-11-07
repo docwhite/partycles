@@ -58,6 +58,10 @@ void ParticlesWindow::initialize()
     m_VBO->release();
     m_VAO->release();
 
+    for (int i = 0; i < 9; i++) {
+        m_particle_system.birth_particle();
+    }
+
 }
 
 void ParticlesWindow::render()
@@ -65,7 +69,7 @@ void ParticlesWindow::render()
     glClear(GL_COLOR_BUFFER_BIT);
 
     // Pass vertex data to CUDA
-    modifying_vbo(m_VBO->bufferId());
+    m_particle_system.advance_particles(m_VBO->bufferId());
 
     m_program->bind();
     m_VAO->bind();

@@ -2,26 +2,25 @@ TARGET = Partycles
 
 QT += core gui widgets
 
-INCLUDEPATH += include/
+INCLUDEPATH += \
+    /usr/include/cuda \   #for thrust
+    include/
 
 HEADERS += \
-    include/particle.h \
     include/particleswindow.h \
     include/particlesystem.h \
     include/viewport.h
 
 SOURCES += \
     src/main.cpp \
-    src/particlesystem.cpp \
     src/particleswindow.cpp \
     src/viewport.cpp
 
 CUDA_CU_FILES= \
-    cu/kernel_particle_advance.cu \
     cu/kernel_modifying_vbo.cu
 
 CUDA_HYBRID_CPP_FILES = \
-    src/particle.cpp
+    src/particlesystem.cpp
 
 
 CXXFLAGS = -c

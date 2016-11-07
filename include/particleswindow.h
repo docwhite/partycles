@@ -6,7 +6,6 @@
 #include <QtGui/QOpenGLBuffer>
 #include "viewport.h"
 #include "particlesystem.h"
-#include "particle.h"
 
 class ParticlesWindow : public Viewport
 {
