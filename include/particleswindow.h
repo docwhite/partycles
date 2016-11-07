@@ -16,13 +16,12 @@ public:
     void render() Q_DECL_OVERRIDE;
 
 private:
-    GLfloat m_vertices[9];
-    QOpenGLBuffer* m_VBO;
-    GLuint m_VBO_index;
-    QOpenGLVertexArrayObject* m_VAO;
+    std::vector<GLfloat> m_vertices;
     GLuint m_posAttr;
-    ParticleSystem m_particle_system;
     QOpenGLShaderProgram *m_program;
+    QOpenGLBuffer* m_VBO;
+    QOpenGLVertexArrayObject* m_VAO;
+    ParticleSystem m_particle_system;
     int m_frame;
 
 protected:

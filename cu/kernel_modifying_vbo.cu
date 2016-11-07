@@ -6,15 +6,18 @@
 
 #include "particlesystem.h"
 
-__global__ void modifying_vbo_kernel(float *d_vbo_positions, float *d_ps_positions, float *d_ps_velocities)
+__global__ void modifying_vbo_kernel(float *d_vbo_positions, float *d_ps_positions, float *d_ps_velocities, int num_of_elements_per_array)
 {
-    unsigned int index = threadIdx.x;
+    unsigned int index = blockDim.x * blockIdx.x + threadIdx.x;
+    if (index < num_of_elements_per_array)
+    {
     d_ps_positions[index] += d_ps_velocities[index];
 
     if (d_ps_positions[index] > 1.0f || d_ps_positions[index] < -1.0f)
         d_ps_velocities[index] = -d_ps_velocities[index];
 
     d_vbo_positions[index] = d_ps_positions[index];
+    }
 }
 
 void modifying_vbo(unsigned int VBO_id, ParticleSystem* ps) {
@@ -36,8 +39,17 @@ void modifying_vbo(unsigned int VBO_id, ParticleSystem* ps) {
 
     // std::cout << num_bytes / sizeof(float) << std::endl;
 
+    unsigned int num_of_elements_per_array = 3 * ps->numParts;
+    unsigned int block_size = 1024;
+    unsigned int grid_size = num_of_elements_per_array / block_size + 1;
+
+//    std::cout << "Number of elements in array: " << num_of_elements_per_array << std::endl;
+//    std::cout << "Grid size: " << grid_size << std::endl;
+//    std::cout << "Block size: " << block_size << std::endl;
+
     // Launch the kernel
-    modifying_vbo_kernel<<<1, 9>>>(d_vbo_positions, d_ps_positions, d_ps_velocities);
+    modifying_vbo_kernel<<<grid_size, block_size>>>(d_vbo_positions, d_ps_positions, d_ps_velocities, num_of_elements_per_array);
+
 
     // Unmap the resources so OpenGL can now use the data to render
     cudaGraphicsUnmapResources(1, &cuda_vbo_resource, 0);

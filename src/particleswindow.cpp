@@ -9,7 +9,7 @@ void modifying_vbo(unsigned int VBO_id);
 static const char *vertexShaderSource =
     "attribute highp vec3 posAttr;\n"
     "void main() {\n"
-    "   gl_PointSize = 10.0;\n"
+    "   gl_PointSize = 1.0;\n"
     "   gl_Position = vec4(posAttr, 1.0);\n"
     "}\n";
 
@@ -24,13 +24,21 @@ ParticlesWindow::ParticlesWindow()
 {
     QSurfaceFormat format;
     format.setSamples(16);
-    this->resize(640, 480);
+    this->resize(1920, 1080);
     this->setFormat(format);
     m_particle_system = ParticleSystem();
 }
 
 void ParticlesWindow::initialize()
 {
+//    for (int i = 0; i < 1000000; i++) {
+//        m_particle_system.birth_particle();
+//    }
+    m_particle_system.initialize_system(1000000);
+
+    m_vertices = std::vector<float>(3*m_particle_system.numParts);
+    std::fill(m_vertices.begin(), m_vertices.end(), 0.0f);
+
     glViewport(0, 0, width(), height());
 
     m_program = new QOpenGLShaderProgram(this);
@@ -50,32 +58,28 @@ void ParticlesWindow::initialize()
     m_VAO->bind();
     m_VBO->bind();
 
-    m_VBO->allocate(m_vertices, 9 * sizeof(GLfloat));
+    std::cout << "Number of particles: " << m_particle_system.numParts << std::endl;
+
+    m_VBO->allocate(&m_vertices[0], 3 * m_particle_system.numParts * sizeof(GLfloat));
 
     m_program->setAttributeBuffer(m_posAttr, GL_FLOAT, 0, 3);
     m_program->enableAttributeArray(m_posAttr);
 
     m_VBO->release();
     m_VAO->release();
-
-    for (int i = 0; i < 9; i++) {
-        m_particle_system.birth_particle();
-    }
-
 }
 
 void ParticlesWindow::render()
 {
     glClear(GL_COLOR_BUFFER_BIT);
 
-    // Pass vertex data to CUDA
     m_particle_system.advance_particles(m_VBO->bufferId());
 
     m_program->bind();
     m_VAO->bind();
 
     glEnable(GL_PROGRAM_POINT_SIZE);
-    glDrawArrays(GL_POINTS, 0, 3);
+    glDrawArrays(GL_POINTS, 0, m_particle_system.numParts);
 
     m_VAO->release();
     m_program->release();
@@ -85,15 +89,8 @@ void ParticlesWindow::render()
 
 void ParticlesWindow::keyPressEvent(QKeyEvent *ev)
 {
-// This is the way you would tell OpenGL that the attribute buffer with
-// all the positions have changed and that needs to redraw them:
-//   m_vertices[6] = -0.8f;
-//   m_vertices[7] = 0.0f;
-//   m_vertices[8] = 0.0f;
-//   m_VBO->bind();
-//   m_VBO->write(0, m_vertices, 9 * sizeof(GLfloat));
-//   m_VBO->release();
-// Not using this right now as CUDA would be redrawing wherever the kernel
-// wants.
-
+    m_particle_system.birth_particle();
+    m_VBO->bind();
+    m_VBO->allocate(&m_vertices[0], 3 * m_particle_system.numParts * sizeof(GLfloat));
+    m_VBO->release();
 }

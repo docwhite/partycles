@@ -17,10 +17,12 @@
 class ParticleSystem {
 public:
     ParticleSystem();
+    void initialize_system(int _numParts);
     void birth_particle();
     void advance_particles(unsigned int VBO_id);
     thrust::device_vector<float> positions;
     thrust::device_vector<float> velocities;
+    unsigned int numParts;
 };
 
 #endif // PARTICLESYSTEM_H
