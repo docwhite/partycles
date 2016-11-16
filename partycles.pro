@@ -1,4 +1,4 @@
-TARGET = Partycles
+TARGET = partycles
 
 QT += core gui widgets
 
